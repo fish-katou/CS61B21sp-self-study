@@ -113,7 +113,44 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        board.startViewingFrom(side);
+        for (int i = 0; i < size(); i++) {
+            Boolean[] couldreach = new  Boolean[]{true,true,true,true};
+            // 检查能否到达该列某位置，从最左列到最右列遍历
+            for (int j = size() - 1; j >= 0; j--) {
+                //从最上方开始遍历，为空则将第一个非空数字挪到该位置
+                if (board.tile(i, j) == null) {
+                    for (int k = j; k >=0; k--) {
+                        if (board.tile(i, k) != null) {
+                            Tile t = board.tile(i, k);
+                            board.move(i, j, t);
+                            changed = true;
+                            j++;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    //不为空，找到第一个非空数字，若相同，则合并（不相同不用动，在下一个空位置经过上面的代码挪动）
+                    for (int k = j - 1; k >=0; k--) {
+                        if (board.tile(i, k) != null) {
+                            if (couldreach[j] && board.tile(i, j).value() == board.tile(i, k).value()) {
+                                score += board.tile(i, j).value() * 2;
+                                couldreach[j] = false;
+                                Tile t = board.tile(i, k);
+                                board.move(i, j, t);
+                                changed = true;
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
+        board.startViewingFrom(Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
@@ -138,6 +175,15 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        int size = b.size();
+        //遍历，为空返回true
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (b.tile(i,j) == null) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +194,18 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        int size = b.size();
+        //遍历，有2048返回true
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (b.tile(i,j) == null) {
+                    continue;
+                }
+                if (b.tile(i,j).value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -159,6 +217,41 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        int size = b.size();
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                Tile tile = b.tile(i,j);
+                //有空的返回true
+                if (tile == null) {
+                    return true;
+                }
+                //上下左右有相同的值，返回true
+                if (i - 1 >= 0) {
+                    Tile uptile = b.tile(i - 1, j);
+                    if (uptile != null && tile.value() == uptile.value()) {
+                        return true;
+                    }
+                }
+                if (i + 1 < size) {
+                    Tile downtile = b.tile(i + 1, j);
+                    if (downtile != null && tile.value() == downtile.value()) {
+                        return true;
+                    }
+                }
+                if (j - 1 >= 0) {
+                    Tile lefttile = b.tile(i, j - 1);
+                    if (lefttile != null && tile.value() == lefttile.value()) {
+                        return true;
+                    }
+                }
+                if (j + 1 < size) {
+                    Tile righttile = b.tile(i, j + 1);
+                    if (righttile != null && tile.value() == righttile.value()) {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 
